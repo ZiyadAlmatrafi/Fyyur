@@ -12,7 +12,6 @@ import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from sqlalchemy.orm import backref, session
-# from werkzeug.datastructures import V
 from forms import *
 from flask_migrate import Migrate
 import sys
@@ -156,20 +155,17 @@ def index():
 @app.route('/venues')
 def venues():
   # TODO: replace with real venues data.
-  #       num_shows should be aggregated based on number of upcoming shows per venue.
-  #data = Venue.query.all()
+  # num_shows should be aggregated based on number of upcoming shows per venue.
   data =[]
   for venue in  Venue.query.distinct(Venue.city):
     venues = Venue.query.filter_by(city = venue.city).all()
-    cities = {
+    my_venues = {
     'city': venue.city,
     'state': venue.state,
     'venues': venues
     }
-    data.append(cities)
-   
-  print(data)
-  #session.query(Venue.name,func)
+    data.append(my_venues)
+
   # data=[{
   #   "city": "San Francisco",
   #   "state": "CA",
@@ -222,16 +218,15 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
-  # data =[]
   try:
     time = datetime.now()
     upcoming_shows=[]
     past_shows=[]
-    data ={}
+    # data ={}
     venue = Venue.query.get(venue_id)
     upcoming_shows_count = Show.query.filter(Show.venue_id==venue_id).filter(Show.start_time>time).count()
     past_shows_count  = Show.query.filter(Show.venue_id==venue_id).filter(Show.start_time<time).count()
-    for show in Show.query.filter(Show.artist_id==venue_id).all():
+    for show in Show.query.filter(Show.venue_id==venue_id).all():
         artist = Artist.query.filter_by(id = show.artist_id).first()
         if (show.start_time < time):
           shows_past = {
@@ -253,7 +248,8 @@ def show_venue(venue_id):
     data = {
     'id': venue.id,
     'name': venue.name,
-    'genres': str([venue.genres]).replace("{","").replace("}","").replace("[","").replace("]","").replace('"','').replace("'","").split(","), #implement loop later
+    'genres': str([venue.genres]).replace("{","").replace("}","").replace("[","")
+              .replace("]","").replace('"','').replace("'","").split(","),
     'city': venue.city,
     'state': venue.state,
     'phone': venue.phone,
@@ -267,7 +263,6 @@ def show_venue(venue_id):
     'past_shows_count': past_shows_count,
     'upcoming_shows_count': upcoming_shows_count
     }
-    print("This is my list: ",str([venue.genres]))
   except:
     print('artist id does not exit ')
     print(sys.exc_info())
@@ -403,7 +398,7 @@ def delete_venue(venue_id):
         venue = Venue.query.get(venue_id)
         db.session.delete(venue)
         db.session.commit()
-  except():
+  except:
         db.session.rollback()
         print(sys.exc_info())
   finally:
@@ -417,7 +412,7 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
   # TODO: replace with real data returned from querying the database
-  data = Artist.query.all()
+  data = Artist.query.order_by(Artist.id)
   # data=[{
   #   "id": 4,
   #   "name": "Guns N Petals",
@@ -448,12 +443,12 @@ def search_artists():
       "num_upcoming_shows": num_upcoming_shows
       }
     data.append(artists)
-  print(artists)
+
   response={
       "count": artist_count,
       "data": data
   }
-  print(response)
+
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/artists/<int:artist_id>')
@@ -465,8 +460,6 @@ def show_artist(artist_id):
     upcoming_shows=[]
     past_shows=[]
     artist = Artist.query.get(artist_id)
-    # upcoming_shows = Show.query.filter(Show.artist_id==artist_id).filter(Show.start_time>time).all()
-    # past_shows = Show.query.filter(Show.artist_id==artist_id).filter(Show.start_time<time).all()
     upcoming_shows_count = Show.query.filter(Show.artist_id==artist_id).filter(Show.start_time>time).count()
     past_shows_count  = Show.query.filter(Show.artist_id==artist_id).filter(Show.start_time<time).count()
     for show in Show.query.filter(Show.artist_id==artist_id).all():
@@ -491,7 +484,8 @@ def show_artist(artist_id):
     data = {
     'id': artist.id,
     'name': artist.name,
-    'genres': str([artist.genres]).replace("{","").replace("}","").replace("[","").replace("]","").replace('"','').replace("'","").split(","), #implement loop later
+    'genres': str([artist.genres]).replace("{","").replace("}","").replace("[","")
+              .replace("]","").replace('"','').replace("'","").split(","),
     'city': artist.city,
     'state': artist.state,
     'phone': artist.phone,
@@ -506,7 +500,6 @@ def show_artist(artist_id):
     'upcoming_shows_count': upcoming_shows_count
     }
     print("This is my list: ",str([artist.genres]))
-    # print(upcoming)
   except:
     print('artist id does not exit ')
     print(sys.exc_info())
@@ -589,19 +582,10 @@ def show_artist(artist_id):
 #  ----------------------------------------------------------------
 @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
 def edit_artist(artist_id):
+    # TODO: populate form with fields from artist with ID <artist_id>
+
   form = ArtistForm()
   artist_update = Artist.query.get(artist_id)
-  # if artist_update:
-  #     request.form['name'] = artist_update.name
-  #     request.form['city'] = artist_update.city
-  #     request.form['state'] = artist_update.city
-  #     request.form['phone'] = artist_update.phone
-  #     request.form['image_link'] = artist_update.image_link
-  #     request.form['facebook_link'] = artist_update.facebook_link
-  #     regenres.data = artist_update.genres 
-  #     request.form['website_link'] = artist_update.website_link
-  #     form.seeking_venue.data = artist_update.seeking_venue
-  #     request.form['seeking_description'] = artist_update.seeking_description
   artist={
     "id": artist_update.id,
     "name": artist_update.name,
@@ -615,7 +599,6 @@ def edit_artist(artist_id):
     "seeking_description": artist_update.seeking_description,
     "image_link": artist_update.image_link
   }
-  # TODO: populate form with fields from artist with ID <artist_id>
   return render_template('forms/edit_artist.html', form=form, artist=artist)
 
 @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
