@@ -15,18 +15,17 @@ from forms import *
 from flask_migrate import Migrate
 import sys
 from sqlalchemy import func
-from models import Venue, Artist, Show
+from models import Venue, Artist, Show, connect
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
 app = Flask(__name__)
 moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
+db = connect(app)
 
 # TODO: connect to a local postgresql database
-migrate = Migrate(app, db)
+
 
 
 #----------------------------------------------------------------------------#

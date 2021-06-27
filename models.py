@@ -12,14 +12,15 @@ from flask_migrate import Migrate
 import sys
 from sqlalchemy import func
 
-
-app = Flask(__name__)
-moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
-
 # TODO: connect to a local postgresql database
-migrate = Migrate(app, db)
+db = SQLAlchemy()
+def connect(my_app):
+    my_app.config.from_object('config')
+    db.app = my_app
+    db.init_app(my_app)
+    migrate = Migrate(my_app, db)
+    return db
+
 
 #----------------------------------------------------------------------------#
 # Models.
